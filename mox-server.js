@@ -2,12 +2,22 @@
  * A tiny server for hosting the noxmox "mox" content where localhost sessions can find it.
  */
 module.exports = {
-  runServer: function(env) {
+  runServer: function(options, onStart) {
+    if(typeof options === "function") {
+      onStart = options;
+      options = false;
+    }
+
+    options = options || {
+      port: 12319,
+      bucket: ""
+    };
+
     var moxserver = require('./package'),
         express = require("express"),
         app = express(),
-        bucket = !!env ? env.get("S3_BUCKET", "") : "",
-        port = !!env ? env.get("MOX_PORT", 12319) : 12319,
+        bucket = options.bucket || "",
+        port = options.port || 12319,
         contentPath = (process.platform === "win32" ? process.env["TEMP"] + "/mox/" : "/tmp/mox/") + bucket + "/";
 
     // Just one job: serve static HTML content.
@@ -27,9 +37,11 @@ module.exports = {
     // Run the server, unless it's already running.
     require('request')('http://localhost:' + port + "/healthcheck", function (err, res, body) {
       if (!!err) {
-        return app.listen(port, function(){
+        app.listen(port, function() {
           console.log("Express server for noxmox listening on http://localhost:"+port+", serving content from " + contentPath);
+          if (onStart) onStart();
         });
+        return;
       }
       if (res.statusCode == 200) {
         try {

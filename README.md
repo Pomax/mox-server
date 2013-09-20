@@ -1,9 +1,15 @@
 A tiny server for hosting `noxmox` mox data (emulated S3 data) as text/html on localhost.
 
-Use: `require("mox-server").runServer(env)`
+Use: `require("mox-server").runServer(options)`
 
-`env` is optional, but when passed should be an object with a `.get` function that
-spits out the following values:
+`options` is optional, but when passed should be an object of the form:
 
-1. `env.get("MOX_PORT")` => integer port number. Defaults to 12319
-2. `env.get("S3_BUCKET")` => an AWS bucket name. Defaults to an empty string
+```
+{
+  port: <number>,
+  bucket: <string>
+}
+```
+
+Both are optional, with `port` setting the port to listen on (defaulting to 12319)
+and `bucket` indicating the S3 bucketname you with to use (defaulting to an empty string).
