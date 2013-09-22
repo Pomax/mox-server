@@ -2,28 +2,22 @@
  * A tiny server for hosting the noxmox "mox" content where localhost sessions can find it.
  */
 module.exports = {
-  runServer: function(options, onStart) {
-    if(typeof options === "function") {
-      onStart = options;
-      options = false;
+  runServer: function(port, onStart) {
+    if(typeof port === "function") {
+      onStart = port;
+      port = false;
     }
 
-    options = options || {
-      port: 12319,
-      bucket: ""
-    };
+    port = port || 12319;
 
     var moxserver = require('./package'),
         express = require("express"),
+        fs = require("fs"),
         app = express(),
-        bucket = options.bucket || "",
-        port = options.port || 12319,
-        contentPath = (process.platform === "win32" ? process.env["TEMP"] + "/mox/" : "/tmp/mox/") + bucket + "/";
+        contentPath = (process.platform === "win32" ? process.env["TEMP"] + "/mox/" : "/tmp/mox/");
 
-    // Just one job: serve static HTML content.
+    // Why this.
     app.disable('x-powered-by');
-    express.static.mime.default_type = "text/html";
-    app.use(express.static(contentPath));
 
     // DEVOPS - Healthcheck
     app.get('/healthcheck', function( req, res ) {
@@ -34,7 +28,30 @@ module.exports = {
       });
     });
 
-    // Run the server, unless it's already running.
+    // params for webmaker-suite buckets
+    app.param("user", function(req, res, next, user) { req.user = user; next(); });
+    app.param("tool", function(req, res, next, tool) { req.tool = tool; next(); });
+    app.param("page", function(req, res, next, page) { req.page = page; next(); });
+
+    app.get('/:user/:tool/:page', function(req, res) {
+      var path = encodeURIComponent("/" + req.user + "/" + req.tool + "/" + req.page),
+          content = fs.readdirSync(contentPath),
+          rendered = false,
+          file;
+      content.forEach(function(bucketDir) {
+        file = contentPath + "/" + bucketDir + "/" + path;
+        if(fs.existsSync(file)) {
+          res.write(fs.readFileSync(file));
+          rendered = true;
+        }
+      });
+      if(!rendered) {
+        res.json({error: 404, message: "could not find "+path});
+      }
+      res.end();
+    });
+
+    // Run the server... unless it's already running on the same port
     require('request')('http://localhost:' + port + "/healthcheck", function (err, res, body) {
       if (!!err) {
         app.listen(port, function() {
