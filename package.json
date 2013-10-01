@@ -1,7 +1,7 @@
 {
   "name": "mox-server",
   "description": "A tiny server for hosting noxmox's mox data as text/html data on localhost",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "mox-server.js",
   "repository": {
     "type": "git",

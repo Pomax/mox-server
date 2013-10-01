@@ -33,8 +33,8 @@ module.exports = {
     app.param("tool", function(req, res, next, tool) { req.tool = tool; next(); });
     app.param("page", function(req, res, next, page) { req.page = page; next(); });
 
-    app.get('/:user/:tool/:page', function(req, res) {
-      var path = encodeURIComponent("/" + req.user + "/" + req.tool + "/" + req.page),
+    app.get('/*', function(req, res) {
+      var path = encodeURIComponent(req.params[0]),
           content = fs.readdirSync(contentPath),
           rendered = false,
           file;
