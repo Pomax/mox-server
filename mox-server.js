@@ -28,11 +28,6 @@ module.exports = {
       });
     });
 
-    // params for webmaker-suite buckets
-    app.param("user", function(req, res, next, user) { req.user = user; next(); });
-    app.param("tool", function(req, res, next, tool) { req.tool = tool; next(); });
-    app.param("page", function(req, res, next, page) { req.page = page; next(); });
-
     app.get('/*', function(req, res) {
       var path = encodeURIComponent(req.params[0]),
           content = fs.readdirSync(contentPath),
