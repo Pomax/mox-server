@@ -29,7 +29,7 @@ module.exports = {
     });
 
     app.get('/*', function(req, res) {
-      var path = encodeURIComponent(req.params[0]),
+      var path = encodeURIComponent("/" + req.params[0]),
           content = fs.readdirSync(contentPath),
           rendered = false,
           file;
