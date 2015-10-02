@@ -14,7 +14,7 @@ module.exports = {
         express = require("express"),
         fs = require("fs"),
         app = express(),
-        contentPath = (process.platform === "win32" ? process.env["TEMP"] + "/mox/" : "/tmp/mox/");
+        contentPath = (process.platform === "win32" ? process.env["TEMP"] + "/mox" : "/tmp/mox");
 
     // Why this.
     app.disable('x-powered-by');
@@ -29,19 +29,30 @@ module.exports = {
     });
 
     app.get('/*', function(req, res) {
-      var path = encodeURIComponent("/" + req.params[0]),
-          content = fs.readdirSync(contentPath),
+      var content = fs.readdirSync(contentPath),
           rendered = false,
-          file;
+          filename, file, dir;
       content.forEach(function(bucketDir) {
-        file = contentPath + "/" + bucketDir + "/" + path;
+        dir = contentPath + "/" + bucketDir + "/";
+
+        // proper location
+        filename = encodeURIComponent("/" + req.params[0]);
+        file = dir + filename;
+        if(fs.existsSync(file)) {
+          res.write(fs.readFileSync(file));
+          rendered = true;
+        }
+
+        // odd windows location
+        filename = encodeURIComponent("\\" + req.params[0].replace(/\//g,"\\"));
+        file = dir + filename;
         if(fs.existsSync(file)) {
           res.write(fs.readFileSync(file));
           rendered = true;
         }
       });
       if(!rendered) {
-        res.json({error: 404, message: "could not find "+path});
+        res.json({error: 404, message: "could not find " + req.params[0]});
       }
       res.end();
     });
