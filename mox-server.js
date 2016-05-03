@@ -31,12 +31,16 @@ module.exports = {
     app.get('/*', function(req, res) {
       var content = fs.readdirSync(contentPath),
           rendered = false,
-          filename, file, dir;
+          filename, file, dir,
+          path = '/' + req.params[0];
+
+      console.log("[" + (new Date()).toISOString() + "] ", path);
+
       content.forEach(function(bucketDir) {
         dir = contentPath + "/" + bucketDir + "/";
 
         // proper location
-        filename = encodeURIComponent("/" + req.params[0]);
+        filename = encodeURIComponent(path);
         file = dir + filename;
         if(fs.existsSync(file)) {
           res.write(fs.readFileSync(file));
@@ -51,9 +55,16 @@ module.exports = {
           rendered = true;
         }
       });
-      if(!rendered) {
+
+      if (!rendered) {
+        if (path.indexOf("index.html") === -1) {
+          if (path.slice(-1) !== '/') { path += '/'; }
+          path += "index.html"
+          return res.redirect(path);
+        }
         res.json({error: 404, message: "could not find " + req.params[0]});
       }
+
       res.end();
     });
 
